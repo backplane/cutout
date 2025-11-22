@@ -92,11 +92,18 @@ struct Cli {
     inputs: Vec<PathBuf>,
 
     /// Enable verbose output with timing information
-    #[arg(long, short = 'v', help = "Enable verbose output with timing information")]
+    #[arg(
+        long,
+        short = 'v',
+        help = "Enable verbose output with timing information"
+    )]
     verbose: bool,
 
     /// Validate capture specifications without processing images
-    #[arg(long, help = "Validate capture specifications without processing images")]
+    #[arg(
+        long,
+        help = "Validate capture specifications without processing images"
+    )]
     dry_run: bool,
 }
 
@@ -112,9 +119,16 @@ fn main() -> Result<()> {
 
     if cli.dry_run {
         // Validate mode: check specs against image dimensions without processing
-        eprintln!("Dry run mode: validating {} capture specs against {} images", specs.len(), cli.inputs.len());
+        eprintln!(
+            "Dry run mode: validating {} capture specs against {} images",
+            specs.len(),
+            cli.inputs.len()
+        );
         for spec in &specs {
-            eprintln!("  Capture '{}': {}x{} at ({}, {})", spec.name, spec.width, spec.height, spec.x, spec.y);
+            eprintln!(
+                "  Capture '{}': {}x{} at ({}, {})",
+                spec.name, spec.width, spec.height, spec.x, spec.y
+            );
         }
         eprintln!();
 
@@ -267,11 +281,21 @@ fn validate_image(path: &Path, origin: Origin, specs: &[CaptureSpec]) -> Result<
         image::open(path).with_context(|| format!("Unable to open image '{}'", path.display()))?;
     let (img_width, img_height) = img.dimensions();
 
-    eprintln!("Validating {} ({}x{})", path.display(), img_width, img_height);
+    eprintln!(
+        "Validating {} ({}x{})",
+        path.display(),
+        img_width,
+        img_height
+    );
 
     for spec in specs {
-        convert_coordinates(spec, origin, img_width, img_height)
-            .with_context(|| format!("Invalid capture spec '{}' for image '{}'", spec.name, path.display()))?;
+        convert_coordinates(spec, origin, img_width, img_height).with_context(|| {
+            format!(
+                "Invalid capture spec '{}' for image '{}'",
+                spec.name,
+                path.display()
+            )
+        })?;
 
         let out_path = make_output_path(path, &spec.name)?;
         eprintln!("  '{}' -> {}", spec.name, out_path.display());
