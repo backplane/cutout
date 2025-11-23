@@ -1,0 +1,67 @@
+# github actions workflow for building and releasing this rust project to github for each tag; for the armv7, arm64, amd64 architectures
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+name: Release
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - aarch64-apple-darwin
+          - aarch64-unknown-linux-musl
+          - armv7-unknown-linux-musleabihf
+          - x86_64-apple-darwin
+          - x86_64-unknown-linux-musl
+
+    steps:
+      # https://github.com/actions/checkout
+      - uses: actions/checkout@v6
+
+      # https://github.com/actions-rs/cargo
+      - run: |
+          #!/bin/sh
+          set -eux
+          cargo build  --release --target ${{ matrix.target }}
+
+      # https://github.com/actions/upload-artifact
+      - uses: actions/upload-artifact@v5
+        with:
+          name: ${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/${{ github.event.repository.name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/actions/checkout
+      - uses: actions/checkout@v6
+
+      # https://github.com/actions/download-artifact
+      - uses: actions/download-artifact@v6
+        with:
+          path: target
+
+      # https://github.com/softprops/action-gh-release
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            target/aarch64-apple-darwin/release/${{ github.event.repository.name }}
+            target/aarch64-pc-windows-msvc/release/${{ github.event.repository.name }}.exe
+            target/aarch64-unknown-linux-gnu/release/${{ github.event.repository.name }}
+            target/aarch64-unknown-linux-musl/release/${{ github.event.repository.name }}
+            target/armv7-pc-windows-msvc/release/${{ github.event.repository.name }}.exe
+            target/armv7-unknown-linux-gnueabihf/release/${{ github.event.repository.name }}
+            target/armv7-unknown-linux-musleabihf/release/${{ github.event.repository.name }}
+            target/x86_64-apple-darwin/release/${{ github.event.repository.name }}
+            target/x86_64-pc-windows-msvc/release/${{ github.event.repository.name }}.exe
+            target/x86_64-unknown-linux-gnu/release/${{ github.event.repository.name }}
+            target/x86_64-unknown-linux-musl/release/${{ github.event.repository.name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
