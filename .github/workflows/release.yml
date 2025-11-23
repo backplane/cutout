@@ -24,8 +24,8 @@ jobs:
       # https://github.com/actions/checkout
       - uses: actions/checkout@v6
 
-      # https://github.com/actions-rs/cargo
-      - run: |
+      - name: cargo-build
+        run: |-
           #!/bin/sh
           set -eux
           cargo build  --release --target ${{ matrix.target }}
